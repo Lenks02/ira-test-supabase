@@ -848,6 +848,16 @@
                 </div>
             </div>
 
+            <div id="dbLoadOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;align-items:center;justify-content:center">
+              <div style="background:#fff;border-radius:14px;padding:28px 32px;min-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
+                <div style="font-weight:700;font-size:15px;color:#0b2a3a;margin-bottom:4px">Memuat data dashboard</div>
+                <div id="dbLoadStage" style="font-size:13px;color:#64748b;margin-bottom:14px">Menyiapkan koneksi...</div>
+                <div style="height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden">
+                  <div id="dbLoadBar" style="height:100%;width:5%;background:#2563eb;transition:width 0.3s"></div>
+                </div>
+                <div id="dbLoadDetail" style="font-size:11px;color:#94a3b8;margin-top:8px"></div>
+              </div>
+            </div>
             <div id="empty" class="empty">
                 <h2>No data loaded</h2>
                 <p>
@@ -1676,7 +1686,26 @@
                 const saved = sessionStorage.getItem("ira_role");
                 if (saved) {
                     ROLE = saved;
-                    enterApp();
+                    // cek apakah ada session Supabase aktif → ambil role DB terbaru
+                    (async () => {
+                        try {
+                            const sb = window.__getSupa && window.__getSupa();
+                            if (sb) {
+                                const { data: sess } = await sb.auth.getSession();
+                                if (sess && sess.session) {
+                                    const { data: perm } = await sb.from("user_roles").select("*").eq("user_id", sess.session.user.id).single();
+                                    const dbRole = perm ? perm.role : null;
+                                    if (dbRole) {
+                                        ROLE = (dbRole === "superadmin") ? "admin" : dbRole;
+                                        window.__DB_ROLE = dbRole;
+                                        window.__DB_PERM = perm;
+                                        window.__DB_USER_EMAIL = sess.session.user.email;
+                                    }
+                                }
+                            }
+                        } catch(e){ console.error("restoreSession db role", e); }
+                        enterApp();
+                    })();
                 }
             }
 
@@ -4807,14 +4836,33 @@ document.addEventListener("click", e => {
 
       window.loadFromDatabase = async function(){
         const c = sbInit(); if(!c){ return false; }
+        const ov = document.getElementById("dbLoadOverlay");
+        const stage = document.getElementById("dbLoadStage");
+        const bar = document.getElementById("dbLoadBar");
+        const detail = document.getElementById("dbLoadDetail");
+        function setProg(pct, s, d){
+          if(ov) ov.style.display = "flex";
+          if(bar) bar.style.width = Math.min(100,pct) + "%";
+          if(stage && s) stage.textContent = s;
+          if(detail) detail.textContent = d || "";
+        }
         try {
-          if(window.__setLoadMsg) window.__setLoadMsg("Memuat data dari database...");
-          // tarik customer + billing (paginated)
-          const custRaw = await fetchAllRows("customer", "code,name,phone,status,city,cust_lat,cust_lng,active_since,paket_end,bts_id,cluster_id,sales_id,bts:bts_id(nama),cluster:cluster_id(nama),sales:sales_id(nama)");
-          // billing: pakai view tanpa revenue kalau bukan superadmin? Untuk sekarang tarik penuh utk admin
+          setProg(5, "Menyiapkan koneksi...", "");
+          // lookup cluster/bts/sales
+          setProg(10, "Memuat data cluster, BTS, sales...", "");
+          const clusters = await fetchAllRows("cluster", "id,nama");
+          const btsList = await fetchAllRows("bts", "id,nama");
+          const salesList = await fetchAllRows("sales", "id,nama");
+          const clusterMap = {}; clusters.forEach(x => clusterMap[x.id] = x.nama);
+          const btsMap = {}; btsList.forEach(x => btsMap[x.id] = x.nama);
+          const salesMap = {}; salesList.forEach(x => salesMap[x.id] = x.nama);
+
+          setProg(20, "Memuat data customer...", "Mengambil dari database (paginated)");
+          const custRaw = await fetchAllRows("customer", "code,name,phone,status,city,cust_lat,cust_lng,active_since,paket_end,bts_id,cluster_id,sales_id");
+          setProg(55, "Memuat data billing...", custRaw.length + " customer dimuat");
           const billRaw = await fetchAllRows("billing", "customer_code,status,periode,tagihan_ke,is_free,nominal,tanggal_invoice,tanggal_bayar");
 
-          // ubah ke format buildRows
+          setProg(85, "Menyusun tampilan dashboard...", billRaw.length + " billing dimuat");
           const customers = custRaw.map(c => ({
             customer_code: c.code,
             name: c.name,
@@ -4827,9 +4875,9 @@ document.addEventListener("click", e => {
             longitude: c.cust_lng,
             active_at: c.active_since,
             paket_end: c.paket_end,
-            bts_nama: c.bts ? c.bts.nama : "",
-            mitra_nama: c.cluster ? c.cluster.nama : "",
-            sales_nama: c.sales ? c.sales.nama : "",
+            bts_nama: btsMap[c.bts_id] || "",
+            mitra_nama: clusterMap[c.cluster_id] || "",
+            sales_nama: salesMap[c.sales_id] || "",
           }));
           const billing = billRaw.map(b => ({
             "Kode Pelanggan": b.customer_code,
@@ -4841,25 +4889,31 @@ document.addEventListener("click", e => {
             "Nama Cluster": "",
             "No. HP": "",
             "Paket": "",
+            tanggal_invoice: b.tanggal_invoice,
+            nominal_tagihan: b.nominal,
           }));
 
-          // panggil buildRows (fungsi dashboard lama) → isi MASTER
           if(typeof buildRows === "function" && typeof mergeRows === "function"){
             MASTER = {};
             const rows = buildRows(customers, billing);
             mergeRows(rows);
+            setProg(100, "Selesai!", customers.length + " customer, " + billing.length + " billing dimuat");
             if(window.__setLoadMsg) window.__setLoadMsg("Data dimuat: "+customers.length+" customer, "+billing.length+" billing");
+            setTimeout(() => { if(ov) ov.style.display = "none"; }, 500);
             return true;
           } else {
             console.error("buildRows/mergeRows tidak ditemukan");
+            if(ov) ov.style.display = "none";
             return false;
           }
         } catch(e){
           console.error("loadFromDatabase error", e);
           if(window.__setLoadMsg) window.__setLoadMsg("Gagal memuat: "+String(e));
+          setProg(100, "Gagal memuat data", String(e));
+          setTimeout(() => { if(ov) ov.style.display = "none"; }, 2000);
           return false;
         }
-      };
+      }
 
       window.startScraping = async function(){
         const c = sbInit(); if(!c){ setScrapeMsg("Belum login DB.", false); return; }
