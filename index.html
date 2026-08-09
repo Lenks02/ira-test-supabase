@@ -779,22 +779,9 @@
             </div>
 
             <div class="srcbar" id="srcbar">
-                <input
-                    id="token"
-                    type="password"
-                    placeholder="Paste Bearer token to load live data&hellip;"
-                    autocomplete="off"
-                />
-                <button class="btn" id="loadBtn">Load data</button>
-                <span
-                    id="scrapeDivider"
-                    style="
-                        width: 1px;
-                        background: var(--line);
-                        align-self: stretch;
-                    "
-                ></span>
-                <button class="btn ghost" id="publishBtn" disabled>Publish to web</button>
+                <input id="token" type="hidden" autocomplete="off" />
+                <button class="btn" id="loadBtn" style="display:none">Load data</button>
+                <button class="btn ghost" id="publishBtn" style="display:none" disabled>Publish to web</button>
                 <div style="position:relative" id="hmWrap">
                   <button class="btn ghost" id="hmBtn" onclick="toggleHamburger()" style="display:flex;align-items:center;gap:5px" aria-label="Menu file dan export">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -802,16 +789,10 @@
                   </button>
                   <div id="hmMenu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;min-width:220px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.12);overflow:hidden">
                     <div style="padding:4px">
-                      <div style="font-size:11px;color:var(--ink-soft);padding:7px 12px 4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">File</div>
-                      <label id="jsonLbl" class="hm-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                      <label id="jsonLbl" class="hm-item" style="display:none">
                         Open file<input id="loadFile" type="file" accept=".json" style="display:none"/>
                       </label>
-                      <button id="saveBtn" class="hm-item" disabled>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        Save file
-                      </button>
-                      <div style="height:0.5px;background:var(--line);margin:4px 0"></div>
+                      <button id="saveBtn" class="hm-item" style="display:none" disabled>Save file</button>
                       <div style="font-size:11px;color:var(--ink-soft);padding:7px 12px 4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Export</div>
                       <button id="exportBtn" class="hm-item hm-accent" disabled>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -837,16 +818,8 @@
                     </div>
                   </div>
                 </div>
-                <div class="status" id="status">
-                    Paste your token and click <b>Load data</b>. It will be kept
-                    in this browser for up to 7 days so you don't have to
-                    re-paste it &mdash; it is never sent anywhere except to
-                    Internet Rakyat's own servers.
-                </div>
-                <div class="status" id="publishNote" style="color: #7a4205">
-                    <b>Publish to web</b> uploads the full customer list to the
-                    public dashboard data URL.
-                </div>
+                <div class="status" id="status"></div>
+                <div class="status" id="publishNote" style="display:none"></div>
             </div>
 
             <div id="dbLoadOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;align-items:center;justify-content:center">
@@ -860,15 +833,10 @@
               </div>
             </div>
             <div id="empty" class="empty">
-                <h2>No data loaded</h2>
+                <h2>Belum ada data</h2>
                 <p>
-                    Paste a Bearer token above and click <b>Load data</b> to
-                    fetch live customers and billing. Each load is merged into a
-                    growing master list, deduplicated by customer code &mdash;
-                    existing customers are updated, new ones added. Use
-                    <b>Export detail (Excel)</b> for a per-customer follow-up
-                    sheet, or <b>Save file</b> to back the master up (e.g. to
-                    Google&nbsp;Drive).
+                    Data dimuat otomatis dari database saat login. Untuk menarik data
+                    terbaru dari IRA, buka tab <b>Database</b> lalu klik <b>Mulai Scraping</b>.
                 </p>
             </div>
 
