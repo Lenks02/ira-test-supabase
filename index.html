@@ -1018,10 +1018,11 @@
                     <span class="bar"></span>New Customers
                 </h3>
                 <div class="tablecard" style="padding:14px 16px;margin-bottom:24px">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:8px">
                         <div style="font-size:12px;color:var(--ink-soft)" id="growthDayLabel">Daily — current month</div>
                         <div id="growthMonthlySummary" style="display:flex;gap:6px;flex-wrap:wrap"></div>
                     </div>
+                    <div id="growthClusterLegend" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px"></div>
                     <div style="position:relative;width:100%;height:200px">
                         <canvas id="growthChart" role="img" aria-label="Daily new customers bar chart, current month">No data available.</canvas>
                     </div>
@@ -2798,6 +2799,7 @@
             }
 
             let _growthChart = null;
+            const CLUSTER_PALETTE = ["#0077b6","#0096c7","#00b4d8","#90e0ef"];
             function renderCustomerGrowthChart() {
                 if (typeof Chart === "undefined") return;
                 const rows = Object.values(MASTER);
@@ -2824,29 +2826,79 @@
                         </span>`;
                     }).join("");
                 }
-                const dailyData = Array.from({length:daysInMonth},()=>0);
+                // Kumpulkan daftar cluster (urutan stabil: alfabetis). Tanpa cluster (kosong) DIABAIKAN.
+                const clusterSet = new Set();
                 rows.forEach(r=>{
                     if(!(r.activeSince||"").startsWith(curYM)) return;
+                    if(!r.cluster) return; // sembunyikan yang belum ada cluster-nya
+                    clusterSet.add(r.cluster);
+                });
+                const clusters = Array.from(clusterSet).sort();
+                // Data harian per cluster: {cluster: [count per hari]}
+                const perCluster = {};
+                clusters.forEach(c => perCluster[c] = Array.from({length:daysInMonth},()=>0));
+                rows.forEach(r=>{
+                    if(!(r.activeSince||"").startsWith(curYM)) return;
+                    if(!r.cluster) return; // sembunyikan yang belum ada cluster-nya
                     const d=parseInt((r.activeSince||"").slice(8,10),10)-1;
-                    if(d>=0&&d<daysInMonth) dailyData[d]++;
+                    if(d<0||d>=daysInMonth) return;
+                    if(perCluster[r.cluster]) perCluster[r.cluster][d]++;
                 });
                 const labels = Array.from({length:daysInMonth},(_,i)=>String(i+1));
-                const colors = dailyData.map((_,i)=>i>=todayD?"#e1e0d9":"#2a78d6");
+                const totals = labels.map((_,i)=> clusters.reduce((s,c)=> s+perCluster[c][i], 0));
+
+                const datasets = clusters.map((c,idx) => ({
+                    label: c,
+                    data: perCluster[c],
+                    backgroundColor: CLUSTER_PALETTE[idx % CLUSTER_PALETTE.length],
+                    borderRadius: 3,
+                }));
+
+                const totalLabelPlugin = {
+                    id: "growthTotalLabel",
+                    afterDatasetsDraw(chart){
+                        if(!clusters.length) return;
+                        const ctx = chart.ctx;
+                        const lastDatasetIdx = clusters.length - 1;
+                        const meta = chart.getDatasetMeta(lastDatasetIdx);
+                        ctx.save();
+                        ctx.font = "9px sans-serif";
+                        ctx.fillStyle = "#898781";
+                        ctx.textAlign = "center";
+                        meta.data.forEach((bar,i)=>{
+                            if(totals[i] === 0) return;
+                            ctx.fillText(String(totals[i]), bar.x, bar.y - 4);
+                        });
+                        ctx.restore();
+                    }
+                };
+
                 if(_growthChart){ _growthChart.destroy(); _growthChart=null; }
                 const ctx = document.getElementById("growthChart"); if(!ctx) return;
                 _growthChart = new Chart(ctx,{
                     type:"bar",
-                    data:{labels,datasets:[{data:dailyData,backgroundColor:colors,borderRadius:3,borderSkipped:"bottom"}]},
+                    data:{labels, datasets},
                     options:{responsive:true,maintainAspectRatio:false,
-                        plugins:{legend:{display:false},tooltip:{callbacks:{
+                        layout:{padding:{top:16}},
+                        plugins:{legend:{display:false}, tooltip:{mode:"index", intersect:false, callbacks:{
                             title:c=>`${c[0].label} ${MON_LABEL[now.getMonth()]} ${now.getFullYear()}`,
-                            label:c=>` ${c.parsed.y} customers baru`}}},
+                            label:c=>` ${c.dataset.label}: ${c.parsed.y} customer baru`,
+                            footer:items=>{const i=items[0].dataIndex; return `Total: ${totals[i]} customer baru`;}
+                        }}},
                         scales:{
-                            x:{grid:{display:false},ticks:{color:"#898781",font:{size:9},autoSkip:true,maxTicksLimit:16}},
-                            y:{grid:{color:"#e1e0d9"},ticks:{color:"#898781",font:{size:9}},border:{display:false}}
+                            x:{stacked:true, grid:{display:false},ticks:{color:"#898781",font:{size:9},autoSkip:true,maxTicksLimit:16}},
+                            y:{stacked:true, grid:{color:"#e1e0d9"},ticks:{color:"#898781",font:{size:9}},border:{display:false}}
                         }
-                    }
+                    },
+                    plugins:[totalLabelPlugin]
                 });
+                // legend custom di bawah judul (dipasang via HTML terpisah, lihat growthClusterLegend)
+                const legEl = document.getElementById("growthClusterLegend");
+                if(legEl){
+                    legEl.innerHTML = clusters.map((c,idx)=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft)">
+                        <span style="width:10px;height:10px;border-radius:2px;background:${CLUSTER_PALETTE[idx % CLUSTER_PALETTE.length]}"></span>${c}
+                    </span>`).join("");
+                }
             }
 
                         function renderSales() {
@@ -4387,12 +4439,12 @@ document.addEventListener("click", e => {
             function normUser(name){ return name.toLowerCase().replace(/\s+/g,"_"); }
 
             window.loadDbUserList = async function(){
-                const c = sbInit(); if(!c){ return; }
+                const c = window.__getSupa ? window.__getSupa() : null; if(!c){ return; }
                 const msgEl = $("dbUserMsg");
                 if(msgEl) msgEl.textContent = "Memuat...";
                 const { data, error } = await c.from("user_roles").select("*").order("email");
                 if(error){ if(msgEl) msgEl.textContent = "Gagal: " + error.message; return; }
-                const ROLES = ["superadmin","owner","gm","spv","tl","sales"];
+                const ROLES = ["superadmin","admin","owner","gm","spv","tl","sales"];
                 const CLUSTERS = ["SURAKARTA KARANGANYAR","SUKOHARJO WONOGIRI"];
                 const tbody = $("dbUserTableBody");
                 if(!tbody) return;
@@ -4414,7 +4466,7 @@ document.addEventListener("click", e => {
             };
 
             window.saveDbUser = async function(btn){
-                const c = sbInit(); if(!c) return;
+                const c = window.__getSupa ? window.__getSupa() : null; if(!c) return;
                 const tr = btn.closest("tr");
                 const uid = tr.getAttribute("data-uid");
                 const payload = {
