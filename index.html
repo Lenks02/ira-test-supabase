@@ -772,6 +772,7 @@
                 <button class="tab-btn active" id="tbDash" onclick="switchTab('dash')">Dashboard</button>
                 <button class="tab-btn" id="tbMonitor" onclick="switchTab('monitor')">Sales Monitoring</button>
                 <button class="tab-btn" id="tbKelola" onclick="switchTab('kelola')" style="display:none">Team</button>
+                <button class="tab-btn" id="tbDatabase" onclick="switchTab('database')" style="display:none">Database</button>
                 <button class="tab-btn" id="tbUser" onclick="switchTab('user')" style="display:none">Users</button>
                 <button class="tab-btn" id="tbAudit" onclick="switchTab('audit')" style="display:none">Audit</button>
                 <button class="tab-btn" id="tbIncentive" onclick="switchTab('incentive')" style="display:none">Incentive</button>
@@ -1089,50 +1090,6 @@
                 <div style="font-size:12px;color:var(--ink-soft)">Manage affiliates, SPVs, team leaders, and their sales assignments.</div>
               </div>
 
-              <!-- ── Database Sync (Supabase) ──────────────────── -->
-              <div style="margin-bottom:24px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#f8fafc">
-                <div class="eyebrow" style="margin-bottom:8px">Database Sync</div>
-                <div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px">
-                  Sync TL &amp; SPV hierarchy to the cloud database. Login required (admin/owner/gm).
-                </div>
-                <div id="sbLoginBox" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                  <input id="sbEmail" type="email" placeholder="Email Supabase" style="flex:1;min-width:160px;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
-                  <input id="sbPassword" type="password" placeholder="Password" style="flex:1;min-width:140px;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
-                  <button class="btn ghost" style="font-size:13px;padding:8px 14px" onclick="sbLogin()">Login DB</button>
-                </div>
-                <div id="sbSyncBox" style="display:none;align-items:center;gap:12px;flex-wrap:wrap">
-                  <span id="sbWho" style="font-size:12px;color:#0f766e;font-weight:600"></span>
-                  <button class="btn" style="font-size:13px;padding:8px 16px" onclick="sbSyncHierarchy()">Sync Hierarchy to Database</button>
-                  <button class="btn ghost" style="font-size:12px;padding:8px 12px" onclick="sbLogout()">Logout DB</button>
-                </div>
-                <div id="sbStatus" style="font-size:12px;margin-top:10px"></div>
-              </div>
-
-              <!-- ── Scraping IRA ──────────────────────────────── -->
-              <div id="scrapePanel" style="display:none;margin-bottom:24px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#fefce8">
-                <div class="eyebrow" style="margin-bottom:8px">Scraping Data IRA</div>
-                <div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px">
-                  Tarik data terbaru dari IRA lalu publish ke database. Hanya superadmin. Data lama tetap tampil sampai publish selesai.
-                </div>
-                <div id="scrapeTokenRow" style="display:none;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
-                  <input id="iraTokenInput" type="password" placeholder="Paste token IRA (tanpa kata Bearer)" style="flex:1;min-width:220px;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
-                  <button class="btn ghost" style="font-size:13px;padding:8px 14px" onclick="saveIraToken()">Simpan Token</button>
-                </div>
-                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-                  <button id="scrapeBtn" class="btn" style="font-size:14px;padding:10px 20px" onclick="startScraping()">▶ Mulai Scraping</button>
-                  <button class="btn ghost" style="font-size:12px;padding:8px 12px" onclick="toggleTokenRow()">Ganti Token</button>
-                  <span id="scrapeUpdated" style="font-size:12px;color:var(--ink-soft)"></span>
-                </div>
-                <div id="scrapeProgress" style="display:none;margin-top:14px">
-                  <div style="font-size:13px;color:var(--ink);margin-bottom:6px" id="scrapeStage">Menyiapkan...</div>
-                  <div style="height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden">
-                    <div id="scrapeBar" style="height:100%;width:0%;background:#16a34a;transition:width 0.3s"></div>
-                  </div>
-                  <div id="scrapeDetail" style="font-size:11px;color:var(--ink-soft);margin-top:6px"></div>
-                </div>
-                <div id="scrapeMsg" style="font-size:12px;margin-top:10px"></div>
-              </div>
-
               <!-- ── Affiliate mapping ──────────────────────────── -->
               <div style="margin-bottom:24px">
                 <div class="eyebrow" style="margin-bottom:10px">Affiliate Mapping</div>
@@ -1252,52 +1209,85 @@
 
             </div>
 
+            <!-- ===== Tab: Database (superadmin only) ===== -->
+            <div id="tabDatabase" style="display:none;padding-top:8px">
+              <div style="margin-bottom:20px">
+                <div style="font-size:16px;font-weight:600;color:var(--ink)">Database</div>
+                <div style="font-size:12px;color:var(--ink-soft)">Scraping data IRA dan sinkronisasi hierarki ke database cloud. Khusus superadmin.</div>
+              </div>
+
+              <!-- ── Database Sync (Supabase) ──────────────────── -->
+              <div style="margin-bottom:24px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#f8fafc">
+                <div class="eyebrow" style="margin-bottom:8px">Database Sync</div>
+                <div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px">
+                  Sync TL &amp; SPV hierarchy to the cloud database. Login required (admin/owner/gm).
+                </div>
+                <div id="sbLoginBox" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                  <input id="sbEmail" type="email" placeholder="Email Supabase" style="flex:1;min-width:160px;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
+                  <input id="sbPassword" type="password" placeholder="Password" style="flex:1;min-width:140px;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
+                  <button class="btn ghost" style="font-size:13px;padding:8px 14px" onclick="sbLogin()">Login DB</button>
+                </div>
+                <div id="sbSyncBox" style="display:none;align-items:center;gap:12px;flex-wrap:wrap">
+                  <span id="sbWho" style="font-size:12px;color:#0f766e;font-weight:600"></span>
+                  <button class="btn" style="font-size:13px;padding:8px 16px" onclick="sbSyncHierarchy()">Sync Hierarchy to Database</button>
+                  <button class="btn ghost" style="font-size:12px;padding:8px 12px" onclick="sbLogout()">Logout DB</button>
+                </div>
+                <div id="sbStatus" style="font-size:12px;margin-top:10px"></div>
+              </div>
+
+              <!-- ── Scraping IRA ──────────────────────────────── -->
+              <div id="scrapePanel" style="display:none;margin-bottom:24px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#fefce8">
+                <div class="eyebrow" style="margin-bottom:8px">Scraping Data IRA</div>
+                <div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px">
+                  Tarik data terbaru dari IRA lalu publish ke database. Hanya superadmin. Data lama tetap tampil sampai publish selesai.
+                </div>
+                <div id="scrapeTokenRow" style="display:none;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+                  <input id="iraTokenInput" type="password" placeholder="Paste token IRA (tanpa kata Bearer)" style="flex:1;min-width:220px;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
+                  <button class="btn ghost" style="font-size:13px;padding:8px 14px" onclick="saveIraToken()">Simpan Token</button>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                  <button id="scrapeBtn" class="btn" style="font-size:14px;padding:10px 20px" onclick="startScraping()">▶ Mulai Scraping</button>
+                  <button class="btn ghost" style="font-size:12px;padding:8px 12px" onclick="toggleTokenRow()">Ganti Token</button>
+                  <span id="scrapeUpdated" style="font-size:12px;color:var(--ink-soft)"></span>
+                </div>
+                <div id="scrapeProgress" style="display:none;margin-top:14px">
+                  <div style="font-size:13px;color:var(--ink);margin-bottom:6px" id="scrapeStage">Menyiapkan...</div>
+                  <div style="height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden">
+                    <div id="scrapeBar" style="height:100%;width:0%;background:#16a34a;transition:width 0.3s"></div>
+                  </div>
+                  <div id="scrapeDetail" style="font-size:11px;color:var(--ink-soft);margin-top:6px"></div>
+                </div>
+                <div id="scrapeMsg" style="font-size:12px;margin-top:10px"></div>
+              </div>
+            </div>
+
             <!-- ===== Tab: Users (admin only) ===== -->
             <div id="tabUser" style="display:none;padding-top:8px">
               <div style="margin-bottom:20px">
                 <div style="font-size:16px;font-weight:600;color:var(--ink)">Users</div>
-                <div style="font-size:12px;color:var(--ink-soft)">Manage static accounts and shared passwords for SPV and TL roles.</div>
+                <div style="font-size:12px;color:var(--ink-soft)">Kelola role dan izin akses tiap user (dari database). Hanya superadmin. Bikin akun baru dilakukan di Supabase, atur izinnya di sini.</div>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;margin-bottom:20px">
-
-                <!-- Static accounts -->
-                <div class="card" style="padding:18px 20px">
-                  <div class="eyebrow" style="margin-bottom:12px">Static Accounts</div>
-                  <div id="staticUserList"></div>
-                </div>
-
-                <!-- Shared passwords -->
-                <div>
-                  <div class="card" style="padding:16px 18px;margin-bottom:12px">
-                    <div class="eyebrow" style="margin-bottom:8px">SPV Shared Password</div>
-                    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px">Default: SPV12345</div>
-                    <div style="display:flex;gap:6px">
-                      <input id="spvPwNew" type="password" placeholder="New SPV password"
-                        style="flex:1;font-family:inherit;font-size:12px;padding:7px 10px;
-                        border:1px solid var(--line);border-radius:8px;background:var(--page);color:var(--ink)"/>
-                      <button class="btn" style="font-size:12px;padding:7px 12px" onclick="saveSharedPassword('spv')">Save</button>
-                    </div>
-                    <div id="spvPwStatus" style="font-size:11px;color:var(--ink-soft);margin-top:5px"></div>
-                  </div>
-                  <div class="card" style="padding:16px 18px">
-                    <div class="eyebrow" style="margin-bottom:8px">TL Shared Password</div>
-                    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px">Default: TL12345</div>
-                    <div style="display:flex;gap:6px">
-                      <input id="tlPwNew2" type="password" placeholder="New TL password"
-                        style="flex:1;font-family:inherit;font-size:12px;padding:7px 10px;
-                        border:1px solid var(--line);border-radius:8px;background:var(--page);color:var(--ink)"/>
-                      <button class="btn" style="font-size:12px;padding:7px 12px" onclick="saveSharedPassword('tl')">Save</button>
-                    </div>
-                    <div id="tlPwStatus2" style="font-size:11px;color:var(--ink-soft);margin-top:5px"></div>
-                  </div>
-                </div>
+              <div style="margin-bottom:12px">
+                <button class="btn ghost" style="font-size:12px;padding:7px 12px" onclick="loadDbUserList()">Refresh</button>
+                <span id="dbUserMsg" style="font-size:12px;margin-left:10px;color:var(--ink-soft)"></span>
               </div>
-
-              <!-- User summary table -->
-              <div class="card" style="padding:0;max-width:900px">
-                <div style="padding:12px 16px;border-bottom:1px solid var(--line);font-size:12px;font-weight:600;color:var(--ink-soft)">All Active Users</div>
-                <div id="userSummaryTable" style="overflow-x:auto"></div>
+              <div class="card" style="padding:0;max-width:1000px;overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-size:13px">
+                  <thead>
+                    <tr style="background:var(--page);text-align:left">
+                      <th style="padding:10px 12px;font-size:11px;color:var(--ink-soft)">Email</th>
+                      <th style="padding:10px 12px;font-size:11px;color:var(--ink-soft)">Role</th>
+                      <th style="padding:10px 12px;font-size:11px;color:var(--ink-soft)">View</th>
+                      <th style="padding:10px 12px;font-size:11px;color:var(--ink-soft)">Download</th>
+                      <th style="padding:10px 12px;font-size:11px;color:var(--ink-soft)">Revenue</th>
+                      <th style="padding:10px 12px;font-size:11px;color:var(--ink-soft)">Cluster</th>
+                      <th style="padding:10px 12px"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="dbUserTableBody"></tbody>
+                </table>
               </div>
+              <div style="font-size:11px;color:var(--ink-soft);margin-top:8px">Cluster kosong = boleh lihat semua cluster.</div>
             </div>
 
             <!-- ===== Tab: Audit (admin, owner, gm) ===== -->
@@ -1517,6 +1507,7 @@
                     if (!sb) { $("suErr").textContent = "Koneksi database gagal."; return; }
                     const { data, error } = await sb.auth.signInWithPassword({ email: u, password: p });
                     if (error) { $("suErr").textContent = "Login gagal: " + error.message; return; }
+                    // (email disinkron otomatis via trigger database saat login)
                     // ambil role + izin dari database
                     const { data: perm } = await sb.from("user_roles").select("*").eq("user_id", data.user.id).single();
                     const dbRole = perm ? perm.role : null;
@@ -1578,7 +1569,7 @@
             // Aktifkan panel superadmin (scraping, sync) — session sudah login dari depan
             async function activateSuperadminPanels() {
                 try {
-                    // panel sync hierarchy
+                    // panel sync hierarchy (session sudah login dari depan, tak perlu login DB kedua)
                     if ($("sbLoginBox")) $("sbLoginBox").style.display = "none";
                     if ($("sbSyncBox")) $("sbSyncBox").style.display = "flex";
                     if ($("sbWho")) $("sbWho").textContent = (window.__DB_USER_EMAIL||"") + " — superadmin";
@@ -1587,8 +1578,9 @@
                         $("scrapePanel").style.display = "block";
                         if (window.__loadLastUpdate) window.__loadLastUpdate();
                     }
-                    // buka tab Team utk superadmin
+                    // buka tab Team + tab Database (satu tombol) utk superadmin
                     if ($("tbKelola")) $("tbKelola").style.display = "";
+                    if ($("tbDatabase")) $("tbDatabase").style.display = "";
                     // MUAT DATA DARI DATABASE lalu render
                     if (window.loadFromDatabase) {
                         const ok = await window.loadFromDatabase();
@@ -3445,13 +3437,14 @@ function switchTab(tab){
                (t==="dash" ? null : document.getElementById("tab"+t.charAt(0).toUpperCase()+t.slice(1)));
     // map tab names to element IDs
   });
-  const tabMap = {dash:"dash", monitor:"tabMonitor", kelola:"tabKelola", user:"tabUser", audit:"tabAudit", incentive:"tabIncentive"};
-  const btnMap = {dash:"tbDash", monitor:"tbMonitor", kelola:"tbKelola", user:"tbUser", audit:"tbAudit", incentive:"tbIncentive"};
+  const tabMap = {dash:"dash", monitor:"tabMonitor", kelola:"tabKelola", database:"tabDatabase", user:"tabUser", audit:"tabAudit", incentive:"tabIncentive"};
+  const btnMap = {dash:"tbDash", monitor:"tbMonitor", kelola:"tbKelola", database:"tbDatabase", user:"tbUser", audit:"tbAudit", incentive:"tbIncentive"};
   // show/hide content
   $("dash") && ($("dash").style.display = tab==="dash" ? "" : "none");
   $("empty") && ($("empty").style.display = tab==="dash" ? ($("dash").style.display==="none" ? "" : "none") : "none");
   $("tabMonitor") && ($("tabMonitor").style.display = tab==="monitor" ? "" : "none");
   $("tabKelola") && ($("tabKelola").style.display = tab==="kelola" ? "" : "none");
+  $("tabDatabase") && ($("tabDatabase").style.display = tab==="database" ? "" : "none");
   $("tabUser") && ($("tabUser").style.display = tab==="user" ? "" : "none");
   $("tabAudit") && ($("tabAudit").style.display = tab==="audit" ? "" : "none");
   $("tabIncentive") && ($("tabIncentive").style.display = tab==="incentive" ? "" : "none");
@@ -3466,7 +3459,7 @@ function switchTab(tab){
     if($("srcbar")) $("srcbar").style.display="none";
   }
   // active tab button
-  ["tbDash","tbMonitor","tbKelola","tbUser","tbAudit","tbIncentive"].forEach(b=>{ const el=$( b); if(el) el.classList.remove("active"); });
+  ["tbDash","tbMonitor","tbKelola","tbDatabase","tbUser","tbAudit","tbIncentive"].forEach(b=>{ const el=$( b); if(el) el.classList.remove("active"); });
   const activeBtn = btnMap[tab]; if(activeBtn && $(activeBtn)) $(activeBtn).classList.add("active");
   if(tab==="monitor") renderSalesMonitoring();
   if(tab==="kelola"){ renderTlList(); renderSalesChecklist(); renderSPVList(); renderSPVChecklist(); populateAffNameSelect(); renderAffParentOptions(); renderAffList(); }
@@ -4393,98 +4386,51 @@ document.addEventListener("click", e => {
 
             function normUser(name){ return name.toLowerCase().replace(/\s+/g,"_"); }
 
-            function renderUserManager(){
-                // --- Static accounts ---
-                const overrides = getPwOverrides();
-                const STATIC_USERS = [
-                    {role:"admin", label:"Admin", username:"admin", badgeClass:"badge-admin", defaultPw:"Ants"},
-                    {role:"gm",    label:"GM",    username:"gm",    badgeClass:"badge-gm",    defaultPw:"GM12345"},
-                    {role:"owner", label:"Owner", username:"owner", badgeClass:"badge-owner", defaultPw:"Owner123"},
-                ];
-                const el=$("staticUserList"); if(!el) return;
-                el.innerHTML = STATIC_USERS.map(u=>`
-                    <div style="border-bottom:0.5px solid var(--line);padding:10px 0">
-                        <div style="display:flex;align-items:center;justify-content:space-between">
-                            <div style="display:flex;align-items:center;gap:8px">
-                                <span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
-                                    background:${u.role==="admin"?"var(--bg-danger)":u.role==="gm"?"var(--bg-accent)":"var(--bg-warning)"};
-                                    color:${u.role==="admin"?"var(--red)":u.role==="gm"?"var(--ocean)":"#92400e"}">
-                                    ${u.label}
-                                </span>
-                                <div>
-                                    <div style="font-size:13px;font-weight:600;font-family:monospace">${u.username}</div>
-                                    <div style="font-size:11px;color:var(--ink-soft)">${overrides[u.role]?"Password changed":"Default: "+u.defaultPw}</div>
-                                </div>
-                            </div>
-                            <button class="btn ghost" style="font-size:12px;padding:5px 10px"
-                                onclick="document.getElementById('uf_${u.role}').style.display=document.getElementById('uf_${u.role}').style.display?'':'flex'">
-                                Ganti password
-                            </button>
-                        </div>
-                        <div id="uf_${u.role}" style="display:none;gap:6px;margin-top:8px;align-items:center">
-                            <input id="ui_${u.role}" type="password" placeholder="New password (min 4 chars)"
-                                style="flex:1;font-family:inherit;font-size:12px;padding:6px 10px;
-                                border:1px solid var(--line);border-radius:8px;background:var(--page);color:var(--ink)"/>
-                            <button class="btn" style="font-size:12px;padding:6px 10px"
-                                onclick="changeStaticPassword('${u.role}','ui_${u.role}','us_${u.role}')">Save</button>
-                            <button class="btn ghost" style="font-size:12px;padding:6px 10px"
-                                onclick="document.getElementById('uf_${u.role}').style.display='none'">Batal</button>
-                        </div>
-                        <div id="us_${u.role}" style="font-size:11px;margin-top:4px"></div>
-                    </div>
-                `).join("");
-
-                // --- User summary table ---
-                const tbl = $("userSummaryTable"); if(!tbl) return;
-                const hier = getTlHierarchy();
-                const spvHier = getSPVHierarchy();
-                const tlToSpv = {};
-                spvHier.forEach(spv=>spv.tls.forEach(t=>tlToSpv[t]=spv.name));
-
-                let rows = STATIC_USERS.map(u=>`
-                    <tr>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-family:monospace;font-size:12px">${u.username}</td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line)"><span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;
-                            background:${u.role==="admin"?"var(--bg-danger)":u.role==="gm"?"var(--bg-accent)":"var(--bg-warning)"};
-                            color:${u.role==="admin"?"var(--red)":u.role==="gm"?"var(--ocean)":"#92400e"}">${u.label}</span></td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-size:12px;color:var(--ink-soft)">${u.role==="admin"?"Super admin":u.role==="gm"?"General Manager":"Owner"}</td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-size:12px;color:var(--ink-soft)">${
-                            u.role==="admin"?"All features":
-                            u.role==="gm"?"Dashboard + Monitoring (no revenue)":
-                            "Dashboard + Monitoring (with revenue)"}</td>
-                    </tr>`).join("");
-
-                spvHier.forEach(spv=>{
-                    const un = normUser(spv.name);
-                    rows+=`<tr>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-family:monospace;font-size:12px">${un}</td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line)"><span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:var(--bg-success);color:var(--text-success)">SPV</span></td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-size:12px;color:var(--ink-soft)">${spv.name} · ${spv.tls.length} TL</td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-size:12px;color:var(--ink-soft)">Monitoring (team) + Team</td>
+            window.loadDbUserList = async function(){
+                const c = sbInit(); if(!c){ return; }
+                const msgEl = $("dbUserMsg");
+                if(msgEl) msgEl.textContent = "Memuat...";
+                const { data, error } = await c.from("user_roles").select("*").order("email");
+                if(error){ if(msgEl) msgEl.textContent = "Gagal: " + error.message; return; }
+                const ROLES = ["superadmin","owner","gm","spv","tl","sales"];
+                const CLUSTERS = ["SURAKARTA KARANGANYAR","SUKOHARJO WONOGIRI"];
+                const tbody = $("dbUserTableBody");
+                if(!tbody) return;
+                tbody.innerHTML = (data||[]).map(u=>{
+                    const roleOpts = ROLES.map(r=>`<option value="${r}"${u.role===r?" selected":""}>${r}</option>`).join("");
+                    const clOpts = '<option value="">— semua —</option>' + CLUSTERS.map(c=>`<option value="${c}"${u.cluster_filter===c?" selected":""}>${c}</option>`).join("");
+                    const emailLabel = u.email || (u.user_id ? u.user_id.slice(0,8)+"…" : "(unknown)");
+                    return `<tr data-uid="${u.user_id}">
+                        <td style="padding:8px 12px;border-bottom:0.5px solid var(--line);font-size:12px">${emailLabel}</td>
+                        <td style="padding:8px 12px;border-bottom:0.5px solid var(--line)"><select class="dbu-role" style="font-size:12px;padding:4px 6px">${roleOpts}</select></td>
+                        <td style="padding:8px 12px;border-bottom:0.5px solid var(--line);text-align:center"><input type="checkbox" class="dbu-view" ${u.can_view?"checked":""}></td>
+                        <td style="padding:8px 12px;border-bottom:0.5px solid var(--line);text-align:center"><input type="checkbox" class="dbu-download" ${u.can_download?"checked":""}></td>
+                        <td style="padding:8px 12px;border-bottom:0.5px solid var(--line);text-align:center"><input type="checkbox" class="dbu-revenue" ${u.can_revenue?"checked":""}></td>
+                        <td style="padding:8px 12px;border-bottom:0.5px solid var(--line)"><select class="dbu-cluster" style="font-size:12px;padding:4px 6px">${clOpts}</select></td>
+                        <td style="padding:8px 12px;border-bottom:0.5px solid var(--line)"><button class="btn" style="font-size:11px;padding:5px 10px" onclick="saveDbUser(this)">Simpan</button></td>
                     </tr>`;
-                });
+                }).join("");
+                if(msgEl) msgEl.textContent = (data||[]).length + " user dimuat.";
+            };
 
-                hier.forEach(tl=>{
-                    const un = normUser(tl.name);
-                    const spvName = tlToSpv[tl.name]||"—";
-                    rows+=`<tr>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-family:monospace;font-size:12px">${un}</td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line)"><span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:var(--page);color:var(--ink-soft);border:1px solid var(--line)">TL</span></td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-size:12px;color:var(--ink-soft)">${tl.name} · ${tl.sales.length} sales · SPV: ${spvName}</td>
-                        <td style="padding:7px 12px;border-bottom:0.5px solid var(--line);font-size:12px;color:var(--ink-soft)">Monitoring (team only)</td>
-                    </tr>`;
-                });
+            window.saveDbUser = async function(btn){
+                const c = sbInit(); if(!c) return;
+                const tr = btn.closest("tr");
+                const uid = tr.getAttribute("data-uid");
+                const payload = {
+                    role: tr.querySelector(".dbu-role").value,
+                    can_view: tr.querySelector(".dbu-view").checked,
+                    can_download: tr.querySelector(".dbu-download").checked,
+                    can_revenue: tr.querySelector(".dbu-revenue").checked,
+                    cluster_filter: tr.querySelector(".dbu-cluster").value || null,
+                };
+                const { error } = await c.from("user_roles").update(payload).eq("user_id", uid);
+                const msgEl = $("dbUserMsg");
+                if(error){ if(msgEl) msgEl.textContent = "Gagal simpan: " + error.message; return; }
+                if(msgEl) msgEl.textContent = "Tersimpan ✓";
+            };
 
-                tbl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
-                    <thead><tr>
-                        <th style="text-align:left;padding:8px 12px;color:var(--ink-soft);font-weight:500;border-bottom:1px solid var(--line)">Username</th>
-                        <th style="text-align:left;padding:8px 12px;color:var(--ink-soft);font-weight:500;border-bottom:1px solid var(--line)">Role</th>
-                        <th style="text-align:left;padding:8px 12px;color:var(--ink-soft);font-weight:500;border-bottom:1px solid var(--line)">Detail</th>
-                        <th style="text-align:left;padding:8px 12px;color:var(--ink-soft);font-weight:500;border-bottom:1px solid var(--line)">Akses</th>
-                    </tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>`;
-            }
+            function renderUserManager(){ if(window.loadDbUserList) window.loadDbUserList(); }
 
             /* ---------- Payment Audit ---------- */
             const AUDIT_CUTOFF = "2026-07-08";  // aturan: daftar >= 8 Juli wajib bayar depan
@@ -4661,7 +4607,7 @@ document.addEventListener("click", e => {
             $("exportCustomerBtn").onclick = exportCustomerRaw;
             $("resetBtn").onclick = clearMaster;
             restoreData();
-            restoreSession();
+            setTimeout(restoreSession, 0); // tunda agar window.__getSupa sempat terdefinisi dulu
         </script>
 
     <!-- ===== Supabase Sync (terpisah dari kode dashboard lama) ===== -->
@@ -4895,6 +4841,8 @@ document.addEventListener("click", e => {
 
           if(typeof buildRows === "function" && typeof mergeRows === "function"){
             MASTER = {};
+            LAST_BILLING_RAW = billing; // penting: dipakai computeRealPayments() utk revenue aktual
+            if(typeof LAST_CUSTOMERS_RAW !== "undefined") LAST_CUSTOMERS_RAW = customers;
             const rows = buildRows(customers, billing);
             mergeRows(rows);
             setProg(100, "Selesai!", customers.length + " customer, " + billing.length + " billing dimuat");
